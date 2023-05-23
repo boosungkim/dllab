@@ -1,12 +1,36 @@
 import torch
 import torch.nn as nn
-from torchsummary import summary
+from torchinfo import summary
 
 CONFIGURATION = {
-    "VGG11": [64,'M',128,'M',256,256,'M',512,512,'M',512,512,'M'],
-    "VGG13": [64,64,'M',128,128,'M',256,256,'M',512,512,'M',512,512,'M'],
-    "VGG16": [64,64,'M',128,128,'M',256,256,256,'M',512,512,512,'M',512,512,512,'M'],
-    "VGG19": [64,64,'M',128,128,'M',256,256,256,256,'M',512,512,512,512,'M',512,512,512,512,'M']
+    "VGG11": [
+        [64,'M'],
+        [128,'M'],
+        [256,256,'M'],
+        [512,512,'M'],
+        [512,512,'M']
+    ],
+    "VGG13": [
+        [64,64,'M'],
+        [128,128,'M'],
+        [256,256,'M'],
+        [512,512,'M'],
+        [512,512,'M']
+    ],
+    "VGG16": [
+        [64,64,'M'],
+        [128,128,'M'],
+        [256,256,256,'M'],
+        [512,512,512,'M'],
+        [512,512,512,'M']
+    ],
+    "VGG19": [
+        [64,64,'M'],
+        [128,128,'M'],
+        [256,256,256,256,'M'],
+        [512,512,512,512,'M'],
+        [512,512,512,512,'M']
+    ]
 }
 
 class VGGModel(nn.Module):
@@ -16,10 +40,19 @@ class VGGModel(nn.Module):
     def __init__(self, architecture_name, num_output):
         super(VGGModel, self).__init__()
         self.architecture = self.create_architecture(CONFIGURATION.get(architecture_name), num_output)
+        self.block1 = self.architecture[0]
+        self.block2 = self.architecture[1]
+        self.block3 = self.architecture[2]
+        self.block4 = self.architecture[3]
+        self.block5 = self.architecture[4]
 
 
     def forward(self,x):
-        z = self.architecture(x)
+        z = self.block1(x)
+        z = self.block2(z)
+        z = self.block3(z)
+        z = self.block4(z)
+        z = self.block5(z)
         return z
 
     
@@ -29,7 +62,7 @@ class VGGModel(nn.Module):
         
         Parameters
         -------------
-        architecture  :   list of int and string
+        architecture  :   2D list of int and string
               Each entry is either the number of filters in the Conv2d layer or an indication
               of MaxPool2d
         num_outputs   :   int
@@ -37,41 +70,68 @@ class VGGModel(nn.Module):
         
         Returns
         -------------
-        nn.Sequential
-              Pytorch NN sequence
+        blocks_list   :   List of nn.Sequential
+            List of PyTorch NN sequences, each representing one block
         """
-        sequence_list = []
+        blocks_list = []
         num_next_input_channels = 3
-
-        for layer in architecture:
-            if isinstance(layer, int):
-                sequence_list += [
-                    nn.Conv2d(in_channels=num_next_input_channels, out_channels=layer, kernel_size=(3,3), stride=1, padding=1),
-                    nn.ReLU()
-                ]
-                num_next_input_channels = layer
-            else:
-                sequence_list += [
-                    nn.MaxPool2d(kernel_size=(2,2), stride=2)
-                ]
         
-        sequence_list += [
-            nn.Flatten(),
-            nn.Linear(7*7*512, 4096),
-            nn.ReLU(),
-            nn.Linear(4096,4096),
-            nn.ReLU(),
-            nn.Linear(4096, num_outputs),
-            nn.Dropout(p=0.5),
-            nn.Softmax(dim=1),
-        ]
-        print(sequence_list)
-        sequence = nn.Sequential(*sequence_list)
-        return sequence
+        for block in architecture:
+            num_next_input_channels, layers = self.create_block(block, num_next_input_channels)
+            blocks_list.append(layers)
+        
+        # Final layer for all VGG models
+        blocks_list.append(
+            nn.Sequential(nn.Flatten(),
+                        nn.Linear(7*7*512, 4096),
+                        nn.ReLU(),
+                        nn.Linear(4096,4096),
+                        nn.ReLU(),
+                        nn.Linear(4096, num_outputs),
+                        nn.Dropout(p=0.5),
+                        nn.Softmax(dim=1),)
+        )
+        return blocks_list
 
 
-    
+    def create_block(self, block, num_next_input_channels):
+        """
+        Create a singular CNN block.
+        
+        Parameters
+        -------------
+        block   :   1D list of int and string of block
+            Each entry is either the int of filters in the Conv2d layer or a str indication
+            of MaxPool2d
+        n       :   number for channels for the Conv2d layer
+        'M'     :   MaxPool2d
+        
+        Returns
+        -------------
+        num_channels    :   int
+            number of channels outputted and inputted to the next layer
+        layers          :   nn.Sequential
+            Pytorch NN sequence for one block
+        """
+        layers_list = []
+        num_channels = num_next_input_channels
+        for layer in block:
+                if isinstance(layer, int):
+                    layers_list += [
+                        nn.Conv2d(in_channels=num_channels, out_channels=layer, kernel_size=(3,3), stride=1, padding=1),
+                        nn.ReLU()
+                    ]
+                    num_channels = layer
+                else:
+                    layers_list += [
+                        nn.MaxPool2d(kernel_size=(2,2), stride=2)
+                    ]
+        layers = nn.Sequential(*layers_list)
+        return num_channels, layers
+
 
 if __name__ == "__main__":
     testing = VGGModel("VGG19", 1000)
+    # t1 = torch.randn(1,3,224,224)
+    # print(testing(t1))
     summary(testing, input_size=(3,224,224), device="cpu")
