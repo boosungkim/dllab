@@ -77,7 +77,7 @@ class DenseNet(nn.Module):
         self.dense_block4, input_channels = self.create_dense_block(input_channels, architecture[3])
 
         # Classification layer
-        self.avgpool = nn.AvgPool2d(kernel_size=7)
+        self.avgpool = nn.AvgPool2d(kernel_size=int(input_width/(2**5)))
         self.flatten = nn.Flatten()
         self.fc = nn.Linear(in_features=1*1*input_channels, out_features=output_num, bias=False)
         self.softmax = nn.Softmax(dim=1)
@@ -94,7 +94,7 @@ class DenseNet(nn.Module):
         z = self.transition_layer3(z)
 
         z = self.dense_block4(z)
-
+        print(z.size())
         z = self.avgpool(z)
         z = self.flatten(z)
         z = self.fc(z)
@@ -114,5 +114,5 @@ class DenseNet(nn.Module):
 if __name__ == "__main__":
     model = DenseNet([6,12,24,16],224,10,12)
     test = torch.rand(1,3,224,224)
-    # print(model(test).size())
-    summary(model, input_size=(1,3,224,224), col_names=["input_size","output_size","num_params"])
+    print(model(test).size())
+    # summary(model, input_size=(1,3,224,224), col_names=["input_size","output_size","num_params"])
