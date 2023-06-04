@@ -51,17 +51,11 @@ class VGGModel(nn.Module):
 
     def forward(self,x):
         z = self.block1(x)
-        # print(z.size())     # torch.Size([64, 112, 112])
         z = self.block2(z)
-        # print(z.size())     # torch.Size([128, 56, 56])
         z = self.block3(z)
-        # print(z.size())     # torch.Size([256, 28, 28])
         z = self.block4(z)
-        # print(z.size())     # torch.Size([512, 14, 14])
         z = self.block5(z)
-        # print(z.size())     # torch.Size([512, 7, 7])
-        z = self.flat(z)      # Flatten Conv2d result for FC layers
-        # print(z.size())
+        z = self.flat(z)
         z = self.block6(z)
         return z
 
@@ -93,12 +87,13 @@ class VGGModel(nn.Module):
         # Final layer for all VGG models
         blocks_list.append(
             nn.Sequential(
-                        nn.Linear(512*int(input_width / 32)**2, 4096), # 32 = 2
+                        nn.Linear(512*int(input_width / 32)**2, 4096), # 32 = 2**5
                         nn.ReLU(),
-                        nn.Linear(4096,4096),
-                        nn.ReLU(),
-                        nn.Linear(4096, num_outputs),
-                        nn.Dropout(p=0.5),
+                        # REMOVED BELOW TO WORK CIFAR10
+                        # nn.Dropout(p=0.5),
+                        # nn.Linear(4096,4096),
+                        # nn.ReLU(),
+                        # nn.Linear(4096, num_outputs),
                         nn.Softmax(dim=1))
         )
         return blocks_list
@@ -129,12 +124,13 @@ class VGGModel(nn.Module):
                 if isinstance(layer, int):
                     layers_list += [
                         nn.Conv2d(in_channels=num_channels, out_channels=layer, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+                        nn.BatchNorm2d(layer) # Added to work on CIFAR10
                         nn.ReLU()
                     ]
                     num_channels = layer
                 else:
                     layers_list += [
-                        nn.MaxPool2d(kernel_size=(2,2), stride=(2,2))
+                        nn.MaxPool2d(kernel_size=2, stride=2)
                     ]
         layers = nn.Sequential(*layers_list)
         return num_channels, layers

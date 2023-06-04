@@ -10,6 +10,6 @@ Made using:
 
 
 ## Accuracy
-| Model                                                 | Best Custom Model Test Accuracy    | Best Pretrained Model Test Accuracy    |
-| -----------------                                     | ----------------------             | ----------------------                 |
-| [VGG16](https://arxiv.org/abs/1409.1556)              | 78.5%                              |                                    |
+| Model                                                 | Best Validation Accuracy    | Best Test Accuracy          | Notes          |
+| -----------------                                     | ----------------------      | ----------------------      | ----------------------      |
+| [VGG16](https://arxiv.org/abs/1409.1556)              | 88.7%                       | 88.2%                       | Included BatchNorm to every layer. Removed two final FC |
