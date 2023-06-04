@@ -45,6 +45,11 @@ class TransitionBlock(nn.Module):
 
 
 class DenseNet(nn.Module):
+    # 
+    # Pytorch implementation of DenseNet 
+    # References:
+    #       - https://wikidocs.net/167702 (diagrams)
+    # 
     def __init__(self, architecture, input_width, output_num, growth_rate=32):
         super(DenseNet, self).__init__()
         self.architecture = architecture
@@ -94,7 +99,6 @@ class DenseNet(nn.Module):
         z = self.transition_layer3(z)
 
         z = self.dense_block4(z)
-        print(z.size())
         z = self.avgpool(z)
         z = self.flatten(z)
         z = self.fc(z)

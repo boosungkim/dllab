@@ -87,7 +87,8 @@ class VGGModel(nn.Module):
         # Final layer for all VGG models
         blocks_list.append(
             nn.Sequential(
-                        nn.Linear(512*int(input_width / 32)**2, 4096), # 32 = 2**5
+                        # Changed output channel number from 4096 to 1000.
+                        nn.Linear(512*int(input_width / 32)**2, 1000), # 32 = 2**5
                         nn.ReLU(),
                         # REMOVED BELOW TO WORK CIFAR10
                         # nn.Dropout(p=0.5),
@@ -124,7 +125,7 @@ class VGGModel(nn.Module):
                 if isinstance(layer, int):
                     layers_list += [
                         nn.Conv2d(in_channels=num_channels, out_channels=layer, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
-                        nn.BatchNorm2d(layer) # Added to work on CIFAR10
+                        nn.BatchNorm2d(layer), # Added to work on CIFAR10
                         nn.ReLU()
                     ]
                     num_channels = layer
@@ -138,8 +139,8 @@ class VGGModel(nn.Module):
 
 if __name__ == "__main__":
     testing = VGGModel("VGG19", 224, 1000)
-    # t1 = torch.randn(1,3,224,224)
-    # print(testing(t1).size())
+    t1 = torch.randn(1,3,224,224)
+    print(testing(t1).size())
     summary(testing, input_size=(1,3,224,224), device="cpu")
 
 # ==========================================================================================

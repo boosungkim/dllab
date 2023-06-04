@@ -7,6 +7,7 @@ The models are made from scratch in PyTorch with no tutorials. The dataset used 
 Made using:
 - Python 3.11.3
 - PyTorch 2.0.1
+- Torchinfo 1.8.0
 
 
 ## Accuracy
