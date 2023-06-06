@@ -1,5 +1,5 @@
-# Machine Learning Papers Implementations
-Implementations of Machine learning papers by Boosung Kim. 
+# Milestone CNN Models Implementations
+Implementations of popular Convolutional Neural Network models by Boosung Kim. 
 
 The models are made from scratch in PyTorch with no tutorials. The dataset used is CIFAR10.
 
@@ -14,3 +14,4 @@ Made using:
 | Model                                                 | Best Validation Accuracy    | Best Test Accuracy          | Notes          |
 | -----------------                                     | ----------------------      | ----------------------      | ----------------------      |
 | [VGG16](https://arxiv.org/abs/1409.1556)              | 88.7%                       | 88.2%                       | Included BatchNorm to every layer. Removed two final FC |
+| [ResNet34](https://arxiv.org/pdf/1512.03385.pdf)              | %                       | %                       |  |

@@ -277,7 +277,7 @@ class CustomResNet34(nn.Module):
         )
 
 if __name__ == "__main__":
-    test_model = CustomResNet34([],224,3,1000)
-    t = torch.randn(1,3,224,224)
+    test_model = CustomResNet34([],32,3,1000)
+    t = torch.randn(1,3,32,32)
     print(test_model(t).size())
-    summary(test_model, input_size=(1,3,224,224), col_names=["input_size","output_size","num_params"])
+    # summary(test_model, input_size=(1,3,224,224), col_names=["input_size","output_size","num_params"])
