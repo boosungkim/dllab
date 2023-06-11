@@ -3,54 +3,33 @@ import torch.nn as nn
 from torchinfo import summary
 
 
-# class ResidualBlockNoBottleneck(nn.Module):
-#     def __init__(self, input_channels, output_channels, repetition_num, dimension_reduction=False):
-#         super(ResidualBlockNoBottleneck, self).__init__()
+class ResidualBlockNoBottleneck(nn.Module):
+    def __init__(self, input_channels, output_channels, stride=1):
+        super(ResidualBlockNoBottleneck, self).__init__()
 
-#         self.conv2_1 = self.create_residual_layer(input_channels, output_channels)
-#         self.relu2_1 = nn.ReLU()
-
-#         self.conv2_2 = self.create_residual_layer(output_channels, output_channels)
-#         self.relu2_2 = nn.ReLU()
+        self.block = nn.Sequential(
+            nn.Conv2d(in_channels=input_channels, out_channels=output_channels, kernel_size=3, stride=stride, padding=1, bias=False),
+            nn.BatchNorm2d(output_channels),
+            nn.ReLU(),
+            nn.Conv2d(in_channels=output_channels, out_channels=output_channels, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(output_channels)
+        )
+        self.relu = nn.ReLU()
         
-#         self.conv2_3 = self.create_residual_layer(output_channels, output_channels)
-#         self.relu2_3 = nn.ReLU()
-        
-#         if dimension_reduction:
-#             self.dim_reduction = self.skip_connection(input_channels, output_channels)
+        if stride != 1:
+            self.shortcut = nn.Sequential(
+                nn.Conv2d(in_channels=input_channels, out_channels=output_channels, kernel_size=1, stride=2, padding=0),
+                nn.BatchNorm2d(output_channels)
+            )
+        else:
+            self.shortcut = nn.Sequential()
     
-#     def forward(self, x):
-#         z = self.conv2_1(z)
-        
-#         if dimension_reduction:
-#             pass
-#         else:
-#             z = z + identity
-#         z = self.relu2_1(z)
-#         identity = z
-#         z = self.conv2_2(z)
-#         z = z + identity
-#         z = self.relu2_2(z)
-#         identity = z
-#         z = self.conv2_3(z)
-#         z = z + identity
-#         z = self.relu2_3(z)
-#         return z
+    def forward(self, x):
+        z = self.block(x)
+        z += self.shortcut(x)
+        z = self.relu(z)
+        return z
 
-#     def create_residual_layer(self, input_channels, output_channels, stride=1):
-#         return nn.Sequential(
-#             nn.Conv2d(in_channels=input_channels, out_channels=output_channels, kernel_size=3, stride=stride, padding=1, bias=False),
-#             nn.BatchNorm2d(output_channels),
-#             nn.ReLU(),
-#             nn.Conv2d(in_channels=output_channels, out_channels=output_channels, kernel_size=3, stride=1, padding=1, bias=False),
-#             nn.BatchNorm2d(output_channels)
-#         )
-    
-#     def skip_connection(self, input_channels, output_channels):
-#         return nn.Sequential(
-#             nn.Conv2d(in_channels=input_channels, out_channels=output_channels, kernel_size=1, stride=2, padding=0),
-#             nn.BatchNorm2d(output_channels)
-#         )
 
 class ResidualBlockBottleneck(nn.Module):
     def __init__(self):
@@ -252,11 +231,8 @@ class CustomResNet34(nn.Module):
         z = self.relu5_3(z)
 
         # final layer
-        print(z.size())
         z = self.flat(z)
-        print(z.size())
         z = self.fc(z)
-        print(z.size())
         z = self.softmax(z)
 
         return z
@@ -277,7 +253,14 @@ class CustomResNet34(nn.Module):
         )
 
 if __name__ == "__main__":
-    test_model = CustomResNet34([],32,3,1000)
-    t = torch.randn(1,3,32,32)
-    print(test_model(t).size())
+    img = torch.randn(1,3,224,224)
+
+    testing_residual_block_input = torch.randn(1,64,112,112)
+    testing_residual_block = ResidualBlockNoBottleneck(64, 64, stride=2)
+    print(testing_residual_block(testing_residual_block_input).size())
+
+
+    # test_model = CustomResNet34([],32,3,1000)
+    # t = torch.randn(1,3,32,32)
+    # print(test_model(t).size())
     # summary(test_model, input_size=(1,3,224,224), col_names=["input_size","output_size","num_params"])
