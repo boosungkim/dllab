@@ -9,9 +9,13 @@ Made using:
 - PyTorch 2.0.1
 - Torchinfo 1.8.0
 
+## Data Augmentation
+
 
 ## Accuracy
-| Model                                                 | Best Validation Accuracy    | Best Test Accuracy          | Notes          |
+| Model                                                 | Best Training Accuracy    | Best Test Accuracy          | Notes          |
 | -----------------                                     | ----------------------      | ----------------------      | ----------------------      |
-| [VGG16](https://arxiv.org/abs/1409.1556)              | 88.7%                       | 88.2%                       | Included BatchNorm to every layer. Removed two final FC |
-| [ResNet34](https://arxiv.org/pdf/1512.03385.pdf)              | %                       | %                       |  |
+| [VGG16](https://arxiv.org/abs/1409.1556)              | 93.4%                       | 88.2%                       | [Blog Post](https://boosungkim.com/blog/2023/first-paper-implementation/). Included BatchNorm to every layer. Removed two final FC |
+| [ResNet](https://arxiv.org/pdf/1512.03385)              | 94.7%                       | 88.5%                       |  |
+| [DenseNet](https://arxiv.org/abs/1608.06993)              | 96.6%                       | 88.7%                       |  |
+| [SE-ResNet](https://arxiv.org/abs/1709.01507)              | 95.9%                       | 88.6%                       |  |

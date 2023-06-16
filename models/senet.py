@@ -16,7 +16,6 @@ class se_block(nn.Module):
             nn.Sigmoid(), # output: bxC
             nn.Unflatten(1, (input_channels,1,1)) # output: bxCx1x1
         )
-        pass
 
     def forward(self,x):
         z = self.sequence(x)
@@ -27,7 +26,7 @@ class se_block(nn.Module):
     
 
 if __name__ == "__main__":
-    model = se_block(3, 3)
-    # test = torch.rand(1,3,224,224)
+    model = se_block(64, 16)
+    # test = torch.rand(1,256,8,8)
     # print(model(test).size())
-    summary(model, input_size=(1,3,224,224), col_names=["input_size","output_size","num_params"])
+    summary(model, input_size=(1,64,32,32), col_names=["input_size","output_size","num_params"])
