@@ -245,83 +245,9 @@ layers          :   nn.Sequential
     <span class="n">testing</span> <span class="o">=</span> <span class="n">VGGModel</span><span class="p">(</span><span class="s2">&quot;VGG19&quot;</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
     <span class="n">t1</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">224</span><span class="p">,</span><span class="mi">224</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">testing</span><span class="p">(</span><span class="n">t1</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">())</span>
-    <span class="n">summary</span><span class="p">(</span><span class="n">testing</span><span class="p">,</span> <span class="n">input_size</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">224</span><span class="p">,</span><span class="mi">224</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span></pre></div>
-    </div>
-  </div>
-  <div class='clearall'></div>
-  <div class='section' id='section-11'>
-    <div class='docs'>
-      <div class='octowrap'>
-        <a class='octothorpe' href='#section-11'>#</a>
-      </div>
-      <p>==========================================================================================
-Layer (type:depth-idx)                   Output Shape              Param #
-==========================================================================================
-VGGModel                                 [1, 1000]                 &ndash;
-├─Sequential: 1-1                        [1, 64, 112, 112]         &ndash;
-│    └─Conv2d: 2-1                       [1, 64, 224, 224]         1,792
-│    └─ReLU: 2-2                         [1, 64, 224, 224]         &ndash;
-│    └─Conv2d: 2-3                       [1, 64, 224, 224]         36,928
-│    └─ReLU: 2-4                         [1, 64, 224, 224]         &ndash;
-│    └─MaxPool2d: 2-5                    [1, 64, 112, 112]         &ndash;
-├─Sequential: 1-2                        [1, 128, 56, 56]          &ndash;
-│    └─Conv2d: 2-6                       [1, 128, 112, 112]        73,856
-│    └─ReLU: 2-7                         [1, 128, 112, 112]        &ndash;
-│    └─Conv2d: 2-8                       [1, 128, 112, 112]        147,584
-│    └─ReLU: 2-9                         [1, 128, 112, 112]        &ndash;
-│    └─MaxPool2d: 2-10                   [1, 128, 56, 56]          &ndash;
-├─Sequential: 1-3                        [1, 256, 28, 28]          &ndash;
-│    └─Conv2d: 2-11                      [1, 256, 56, 56]          295,168
-│    └─ReLU: 2-12                        [1, 256, 56, 56]          &ndash;
-│    └─Conv2d: 2-13                      [1, 256, 56, 56]          590,080
-│    └─ReLU: 2-14                        [1, 256, 56, 56]          &ndash;
-│    └─Conv2d: 2-15                      [1, 256, 56, 56]          590,080
-│    └─ReLU: 2-16                        [1, 256, 56, 56]          &ndash;
-│    └─Conv2d: 2-17                      [1, 256, 56, 56]          590,080
-│    └─ReLU: 2-18                        [1, 256, 56, 56]          &ndash;
-│    └─MaxPool2d: 2-19                   [1, 256, 28, 28]          &ndash;
-├─Sequential: 1-4                        [1, 512, 14, 14]          &ndash;
-│    └─Conv2d: 2-20                      [1, 512, 28, 28]          1,180,160
-│    └─ReLU: 2-21                        [1, 512, 28, 28]          &ndash;
-│    └─Conv2d: 2-22                      [1, 512, 28, 28]          2,359,808
-│    └─ReLU: 2-23                        [1, 512, 28, 28]          &ndash;
-│    └─Conv2d: 2-24                      [1, 512, 28, 28]          2,359,808
-│    └─ReLU: 2-25                        [1, 512, 28, 28]          &ndash;
-│    └─Conv2d: 2-26                      [1, 512, 28, 28]          2,359,808
-│    └─ReLU: 2-27                        [1, 512, 28, 28]          &ndash;
-│    └─MaxPool2d: 2-28                   [1, 512, 14, 14]          &ndash;
-├─Sequential: 1-5                        [1, 512, 7, 7]            &ndash;
-│    └─Conv2d: 2-29                      [1, 512, 14, 14]          2,359,808
-│    └─ReLU: 2-30                        [1, 512, 14, 14]          &ndash;
-│    └─Conv2d: 2-31                      [1, 512, 14, 14]          2,359,808
-│    └─ReLU: 2-32                        [1, 512, 14, 14]          &ndash;
-│    └─Conv2d: 2-33                      [1, 512, 14, 14]          2,359,808
-│    └─ReLU: 2-34                        [1, 512, 14, 14]          &ndash;
-│    └─Conv2d: 2-35                      [1, 512, 14, 14]          2,359,808
-│    └─ReLU: 2-36                        [1, 512, 14, 14]          &ndash;
-│    └─MaxPool2d: 2-37                   [1, 512, 7, 7]            &ndash;
-├─Flatten: 1-6                           [1, 25088]                &ndash;
-├─Sequential: 1-7                        [1, 1000]                 &ndash;
-│    └─Linear: 2-38                      [1, 4096]                 102,764,544
-│    └─ReLU: 2-39                        [1, 4096]                 &ndash;
-│    └─Linear: 2-40                      [1, 4096]                 16,781,312
-│    └─ReLU: 2-41                        [1, 4096]                 &ndash;
-│    └─Linear: 2-42                      [1, 1000]                 4,097,000
-│    └─Softmax: 2-44                     [1, 1000]                 &ndash;
-==========================================================================================
-Total params: 143,667,240
-Trainable params: 143,667,240
-Non-trainable params: 0
-Total mult-adds (Units.GIGABYTES): 19.65
-==========================================================================================
-Input size (MB): 0.60
-Forward/backward pass size (MB): 118.89
-Params size (MB): 574.67
-Estimated Total Size (MB): 694.16
-==========================================================================================</p>
-    </div>
-    <div class='code'>
-      <div class="highlight"><pre></pre></div>
+    <span class="n">summary</span><span class="p">(</span><span class="n">testing</span><span class="p">,</span> <span class="n">input_size</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">224</span><span class="p">,</span><span class="mi">224</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+
+</pre></div>
     </div>
   </div>
   <div class='clearall'></div>
