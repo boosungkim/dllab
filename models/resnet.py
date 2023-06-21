@@ -1,26 +1,29 @@
+"""
+This is a Pytorch implementation of the [Deep Residual Learning for Image Recognition](https://arxiv.org/pdf/1512.03385.pdf) paper.
+
+The researchers behind ResNet aimed to address the common "degradation problem" encountered in deep convolutional networks.
+
+When the depth of a CNN model is increased, it initially shows an improvement in performance 
+but eventually degrades rapidly as the training accuracy plateus or even worsens over time. 
+
+The common misconception is that this rapid degradation in accuracy is caused by overfitting. 
+While overfitting due to exploding/vanishing gradients is expected in very deep 
+networks, it is accounted for by nomalized initializations of the dataset and the 
+intermediate Batch Normalization layers.
+
+The degradation is definitely not caused by overfitting, as adding more layers actually causes 
+the training error to increase. While the researchers in the paper are not sure, 
+their conclusion is that “deep plain nets may have exponentially low convergence rates,” which 
+can be prevented with Residual Learning.
+
+[Accompanying blog post](https://boosungkim.com/blog/2023/resnet34-implementation/)
+"""
+
 import torch
 import torch.nn as nn
 from torchinfo import summary
-# 
-# Pytorch implementation of the ResNet model from Deep Residual Learning for Image Recognition
-# References:
-#       @article{DBLP:journals/corr/HeZRS15,
-#       author    = {Kaiming He and
-#                   Xiangyu Zhang and
-#                   Shaoqing Ren and
-#                   Jian Sun},
-#       title     = {Deep Residual Learning for Image Recognition},
-#       journal   = {CoRR},
-#       volume    = {abs/1512.03385},
-#       year      = {2015},
-#       url       = {http://arxiv.org/abs/1512.03385},
-#       archivePrefix = {arXiv},
-#       eprint    = {1512.03385},
-#       timestamp = {Wed, 17 Apr 2019 17:23:45 +0200},
-#       biburl    = {https://dblp.org/rec/journals/corr/HeZRS15.bib},
-#       bibsource = {dblp computer science bibliography, https://dblp.org}
-#       }
-#
+
+# === Residual Block with no Bottleneck ===
 
 class ResidualBlockNoBottleneck(nn.Module):
     expansion = 1
@@ -50,6 +53,8 @@ class ResidualBlockNoBottleneck(nn.Module):
         z += self.shortcut(x)
         z = self.relu(z)
         return z
+
+# === Residual Block with Bottleneck ===
 
 
 class ResidualBlockBottleneck(nn.Module):
@@ -82,6 +87,9 @@ class ResidualBlockBottleneck(nn.Module):
         z += self.shortcut(x)
         z = self.relu(z)
         return z
+
+# === ResNet ===
+
 
 class ResNet(nn.Module):
     def __init__(self, architecture, input_width, output_num,  block_type=ResidualBlockNoBottleneck, input_channels=3):
@@ -131,6 +139,9 @@ class ResNet(nn.Module):
             self.current_channels = in_channels*block_type.expansion
             stride = 1
         return nn.Sequential(*layers)
+
+# === Tensor Test ===
+
 
 if __name__ == "__main__":
     # Testing the No Bottleneck Residual Block

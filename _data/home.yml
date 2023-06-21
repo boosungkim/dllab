@@ -6,13 +6,13 @@ navbar_entries:
     url: https://boosungkim.com
 
 project_entries:
-  - title: Project 2
+  - title: ResNet
     url: docs/resnet.html
-    desc: Projects are shown in card layout
+    desc: ResNet with bottleneck skip-connections from "Deep Residual Learning for Image Recognition"
 
-  - title: VGG Models
+  - title: VGG
     url: docs/vgg.html
-    desc: Various VGG models from Very Deep Convulutional Networks For Large-Scale Image Recognition
+    desc: Various VGG models from "Very Deep Convulutional Networks For Large-Scale Image Recognition"
 
 test_entries:
   - title: Project 4
