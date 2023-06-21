@@ -20,7 +20,7 @@ from torchinfo import summary
 # === Model Architecture ===
 
 """
-![image](/DLLab/assets/images/posts/vgg/vgg-architecture.png)
+![image](/dllab/assets/images/posts/vgg/vgg-architecture.png)
 
 There are 6 VGG papers introduced in the paper, the primary ones 
 being VGG11, VGG13, VGG16, and VGG19.
