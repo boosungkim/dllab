@@ -1,6 +1,6 @@
 title: DeepLearnLab
 author: Boosung Kim
-url: https://boosungkim.com/DLLab # root address of the site
+url: https://boosungkim.com/dllab # root address of the site
 description: > # description of the site (multiple lines allowed)
   DeepLearnLab is an accumulation of Pytorch/Tensorflow implementations of milestone papers in Deep Learning. This site and the implementations were developed by Boosung Kim.
 
