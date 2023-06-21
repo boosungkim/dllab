@@ -2,14 +2,16 @@
 <html>
 <head>
   <meta http-equiv="content-type" content="text/html;charset=utf-8">
-  <title>vgg.py</title>
+  <title>VGG</title>
   <link rel="stylesheet" href="pycco.css">
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
 <div id='container'>
   <div id="background"></div>
   <div class='section'>
-    <div class='docs'><h1>vgg.py</h1></div>
+    <div class='docs'><h1>VGG</h1></div>
   </div>
   <div class='clearall'>
   <div class='section' id='section-0'>
@@ -17,14 +19,59 @@
       <div class='octowrap'>
         <a class='octothorpe' href='#section-0'>#</a>
       </div>
-      
+      <p>This is a Pytorch implementation of the <a href="https://arxiv.org/abs/1409.1556">Very Deep Convolutional Networks 
+for Large-Scale Image Recognition</a> paper by
+Karen Simonyan and Andrew Zisserman.</p>
+<p>The VGG paper was unique for their time, as it 
+proved the importance of depth in image classification. Unlike their 
+predecessors, VGG models utilize simple filters and a repetitive structure. 
+In return for its simplicity, VGG has a far greater depth, the deepest 
+variation in the paper having 19 layers, which was a lot for its time.</p>
+<p><a href="https://boosungkim.com/blog/2023/first-paper-implementation/">Accompanying blog post</a></p>
     </div>
     <div class='code'>
       <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
-<span class="kn">from</span> <span class="nn">torchinfo</span> <span class="kn">import</span> <span class="n">summary</span>
-
-<span class="n">CONFIGURATION</span> <span class="o">=</span> <span class="p">{</span>
+<span class="kn">from</span> <span class="nn">torchinfo</span> <span class="kn">import</span> <span class="n">summary</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-1'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-1'>#</a>
+      </div>
+      <h3><span id="model-architecture" href="model-architecture"> Model Architecture </span></h3>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-2'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-2'>#</a>
+      </div>
+      <p>IMAGE</p>
+<p>There are 6 VGG papers introduced in the paper, the primary ones 
+being VGG11, VGG13, VGG16, and VGG19.</p>
+<p>The <code>CONFIGURATION</code> dictionary contains nested lists for each model. 
+Each array in the list represents a single block, and each entry in the
+array represents the type of layer:</p>
+<ul>
+<li>
+<p>If the layer is represented by the number \(n\), it is a \(3 \times 3\) convolution
+with \(n\) filters.</p>
+</li>
+<li>
+<p>If the layer is represented by the string &lsquo;M&rsquo;, it is a Maxpool 
+layer.</p>
+</li>
+</ul>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="n">CONFIGURATION</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;VGG11&quot;</span><span class="p">:</span> <span class="p">[</span>
         <span class="p">[</span><span class="mi">64</span><span class="p">,</span><span class="s1">&#39;M&#39;</span><span class="p">],</span>
         <span class="p">[</span><span class="mi">128</span><span class="p">,</span><span class="s1">&#39;M&#39;</span><span class="p">],</span>
@@ -57,56 +104,15 @@
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-1'>
-    <div class='docs'>
-      <div class='octowrap'>
-        <a class='octothorpe' href='#section-1'>#</a>
-      </div>
-      
-    </div>
-    <div class='code'>
-      <div class="highlight"><pre><span class="k">class</span> <span class="nc">VGGModel</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span></pre></div>
-    </div>
-  </div>
-  <div class='clearall'></div>
-  <div class='section' id='section-2'>
-    <div class='docs'>
-      <div class='octowrap'>
-        <a class='octothorpe' href='#section-2'>#</a>
-      </div>
-      <p>Pytorch implementation of the various VGG models from Very Deep Convulutional Networks For Large-Scale Image Recognition</p>
-    </div>
-    <div class='code'>
-      <div class="highlight"><pre>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">architecture_name</span><span class="p">,</span> <span class="n">input_width</span><span class="p">,</span> <span class="n">num_output</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">VGGModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">architecture</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_architecture</span><span class="p">(</span><span class="n">CONFIGURATION</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">architecture_name</span><span class="p">),</span> <span class="n">input_width</span><span class="p">,</span> <span class="n">num_output</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">block1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">architecture</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">block2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">architecture</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">block3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">architecture</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">block4</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">architecture</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">block5</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">architecture</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">block6</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">architecture</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">flat</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Flatten</span><span class="p">()</span></pre></div>
-    </div>
-  </div>
-  <div class='clearall'></div>
   <div class='section' id='section-3'>
     <div class='docs'>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-3'>#</a>
       </div>
-      
+      <h3><span id="vgg-model" href="vgg-model"> VGG Model </span></h3>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">x</span><span class="p">):</span>
-        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block2</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
-        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block3</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
-        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block4</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
-        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block5</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
-        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flat</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
-        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block6</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">z</span></pre></div>
+      <div class="highlight"><pre></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -115,19 +121,10 @@
       <div class='octowrap'>
         <a class='octothorpe' href='#section-4'>#</a>
       </div>
-      <p>Create the CNN architecture with num_outputs outputs in the end.</p>
-<h2>Parameters</h2>
-<p>architecture  :   2D list of int and string
-      Each entry is either the number of filters in the Conv2d layer or an indication
-      of MaxPool2d
-num_outputs   :   int
-      Number of output classes in the end of the network</p>
-<h2>Returns</h2>
-<p>blocks_list   :   List of nn.Sequential
-    List of PyTorch NN sequences, each representing one block</p>
+      <p>This is the main part of the VGG model.</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">create_architecture</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">architecture</span><span class="p">,</span> <span class="n">input_width</span><span class="p">,</span> <span class="n">num_outputs</span><span class="p">):</span></pre></div>
+      <div class="highlight"><pre></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -139,12 +136,7 @@ num_outputs   :   int
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre>        <span class="n">blocks_list</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">num_next_input_channels</span> <span class="o">=</span> <span class="mi">3</span>
-        
-        <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">architecture</span><span class="p">:</span>
-            <span class="n">num_next_input_channels</span><span class="p">,</span> <span class="n">layers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_block</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">num_next_input_channels</span><span class="p">)</span>
-            <span class="n">blocks_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span></pre></div>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">VGGModel</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -153,11 +145,13 @@ num_outputs   :   int
       <div class='octowrap'>
         <a class='octothorpe' href='#section-6'>#</a>
       </div>
-      <p>Final layer for all VGG models</p>
+      <h4>Parameters</h4>
+<p><code>architecture_name</code>: the name of the VGG model, like &ldquo;VGG16&rdquo; or &ldquo;VGG19&rdquo;<br />
+<code>input_width</code>: the width of the input image<br />
+<code>num_output</code>: the number of classes</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>        <span class="n">blocks_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span></pre></div>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">architecture_name</span><span class="p">,</span> <span class="n">input_width</span><span class="p">,</span> <span class="n">num_output</span><span class="p">):</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -166,11 +160,11 @@ num_outputs   :   int
       <div class='octowrap'>
         <a class='octothorpe' href='#section-7'>#</a>
       </div>
-      <p>Changed output channel number from 4096 to 1000.</p>
+      <p>Generate the Pytorch model from the given nested list.</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>                        <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">512</span><span class="o">*</span><span class="nb">int</span><span class="p">(</span><span class="n">input_width</span> <span class="o">/</span> <span class="mi">32</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span> <span class="c1"># 32 = 2**5</span>
-                        <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span></pre></div>
+      <div class="highlight"><pre>        <span class="nb">super</span><span class="p">(</span><span class="n">VGGModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">architecture</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_architecture</span><span class="p">(</span><span class="n">CONFIGURATION</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">architecture_name</span><span class="p">),</span> <span class="n">input_width</span><span class="p">,</span> <span class="n">num_output</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -179,16 +173,16 @@ num_outputs   :   int
       <div class='octowrap'>
         <a class='octothorpe' href='#section-8'>#</a>
       </div>
-      <p>REMOVED BELOW TO WORK CIFAR10
-nn.Dropout(p=0.5),
-nn.Linear(4096,4096),
-nn.ReLU(),
-nn.Linear(4096, num_outputs),</p>
+      
     </div>
     <div class='code'>
-      <div class="highlight"><pre>                        <span class="n">nn</span><span class="o">.</span><span class="n">Softmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="n">blocks_list</span></pre></div>
+      <div class="highlight"><pre>        <span class="bp">self</span><span class="o">.</span><span class="n">block1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">architecture</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">architecture</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">architecture</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block4</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">architecture</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block5</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">architecture</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block6</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">architecture</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flat</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Flatten</span><span class="p">()</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -197,21 +191,11 @@ nn.Linear(4096, num_outputs),</p>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-9'>#</a>
       </div>
-      <p>Create a singular CNN block.</p>
-<h2>Parameters</h2>
-<p>block   :   1D list of int and string of block
-    Each entry is either the int of filters in the Conv2d layer or a str indication
-    of MaxPool2d
-n       :   number for channels for the Conv2d layer
-&lsquo;M&rsquo;     :   MaxPool2d</p>
-<h2>Returns</h2>
-<p>num_channels    :   int
-    number of channels outputted and inputted to the next layer
-layers          :   nn.Sequential
-    Pytorch NN sequence for one block</p>
+      <p>Propagate through the network.</p>
+<p><code>x</code> has the input dimensions <code>(batch_size, input_channels, image_height, image_width)</code></p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">create_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">,</span> <span class="n">num_next_input_channels</span><span class="p">):</span></pre></div>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">x</span><span class="p">):</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -220,34 +204,346 @@ layers          :   nn.Sequential
       <div class='octowrap'>
         <a class='octothorpe' href='#section-10'>#</a>
       </div>
+      <p>Blocks 1 ~ 5</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block2</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block3</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block4</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block5</span><span class="p">(</span><span class="n">z</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-11'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-11'>#</a>
+      </div>
+      <p>Flatten layer to connect the feature map to a FC layer.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flat</span><span class="p">(</span><span class="n">z</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-12'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-12'>#</a>
+      </div>
+      <p>Final layers to produce the image classification prediction.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block6</span><span class="p">(</span><span class="n">z</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-13'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-13'>#</a>
+      </div>
       
     </div>
     <div class='code'>
+      <div class="highlight"><pre>        <span class="k">return</span> <span class="n">z</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-14'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-14'>#</a>
+      </div>
+      <h4>Parameters</h4>
+<p><code>architecture</code>: 2D list of int and string that represent layers<br />
+<code>num_outputs</code>: Number of output classes at the end of the network</p>
+<h4>Returns</h4>
+<p><code>blocks_list</code>: List of PyTorch NN sequences, each representing one block</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">create_architecture</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">architecture</span><span class="p">,</span> <span class="n">input_width</span><span class="p">,</span> <span class="n">num_outputs</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-15'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-15'>#</a>
+      </div>
+      <p>Store all blocks in <code>blocks_list</code> to be returned.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">blocks_list</span> <span class="o">=</span> <span class="p">[]</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-16'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-16'>#</a>
+      </div>
+      <p>Assume the input image has 3 channels (RGB).</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">num_next_input_channels</span> <span class="o">=</span> <span class="mi">3</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-17'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-17'>#</a>
+      </div>
+      <p>Create convolutional blocks. <code>num_next_input_channels</code> keeps track of 
+the number of channels to be input into the next block.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        
+        <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">architecture</span><span class="p">:</span>
+            <span class="n">num_next_input_channels</span><span class="p">,</span> <span class="n">layers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_block</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">num_next_input_channels</span><span class="p">)</span>
+            <span class="n">blocks_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-18'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-18'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">blocks_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-19'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-19'>#</a>
+      </div>
+      <p>Create the final block.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>            <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-20'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-20'>#</a>
+      </div>
+      <p>A Fully Connected layer with the dimensions of \((512 \cdot (\frac{input width}{32})^2, 1000)\). </p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-21'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-21'>#</a>
+      </div>
+      <p>There are 5 MaxPool layers in the network, so the <code>input_width</code> entered in the beginning is halved five times (so divided by 32 overall). 
+The final layer in the 5th block of VGG uses 512 filters, meaning that the output result of the 5th block would be 
+<code>(batch_size, 512, input_height // 32, input_width // 32)</code>. We are assuming that the input images are squares.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-22'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-22'>#</a>
+      </div>
+      <p>Once the result passes through the <code>nn.Flatten()</code> layer, the dimensions would be \((batch size, 512 \cdot (\frac{input width}{32})^2)\). 
+The FC layer contains 4096 neurons, so the dimensions of the FC layer would be \((512 \cdot (\frac{input width}{32})^2, 1000)\).</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>                        <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">512</span><span class="o">*</span><span class="nb">int</span><span class="p">(</span><span class="n">input_width</span> <span class="o">/</span> <span class="mi">32</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4096</span><span class="p">),</span> <span class="c1"># 32 = 2**5</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-23'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-23'>#</a>
+      </div>
+      <p>ReLU</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>                        <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-24'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-24'>#</a>
+      </div>
+      <p>The output of the previous FC layer is <code>(batch_size, 4096)</code>. This FC layer also has 4096 neurons, so its dimension is 
+\((4096,4096)\)            </p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>                        <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">4096</span><span class="p">,</span><span class="mi">4096</span><span class="p">),</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-25'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-25'>#</a>
+      </div>
+      <p>ReLU</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>                        <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-26'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-26'>#</a>
+      </div>
+      <p>The final FC layer outputs <code>(batch_size, num_outputs)</code>.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>                        <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">4096</span><span class="p">,</span> <span class="n">num_outputs</span><span class="p">),</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-27'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-27'>#</a>
+      </div>
+      <p>Softmax</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>                        <span class="n">nn</span><span class="o">.</span><span class="n">Softmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+        <span class="p">)</span>
+
+
+        <span class="k">return</span> <span class="n">blocks_list</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-28'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-28'>#</a>
+      </div>
+      <p>Create a singular block.</p>
+<h4>Parameters</h4>
+<p><code>block</code>: 1D list of int and string of block, where each entry is either the number of filters 
+in the Conv2d layer or a str indication of MaxPool2d  </p>
+<h4>Returns</h4>
+<p><code>num_channels</code>: output number of channels of the convolutional block<br />
+<code>layers</code>: nn.Sequential for a singular block in VGG</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">create_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">,</span> <span class="n">num_next_input_channels</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-29'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-29'>#</a>
+      </div>
+      <p>Keep track of number of channels passed between Conv2d layers.</p>
+    </div>
+    <div class='code'>
       <div class="highlight"><pre>        <span class="n">layers_list</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">num_channels</span> <span class="o">=</span> <span class="n">num_next_input_channels</span>
-        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">block</span><span class="p">:</span>
+        <span class="n">num_channels</span> <span class="o">=</span> <span class="n">num_next_input_channels</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-30'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-30'>#</a>
+      </div>
+      <p>The original VGG paper follows Conv2d -&gt; ReLU for each conv layer, but BatchNorm was added to handle overfitting.</p>
+<p>The paper explicitly mentions that it only uses convolutional filters with kernel size \(3 \times 3\). 
+The paper utilizes &ldquo;same&rdquo; convolutions (convolutions that do not change the output width and height). 
+From the following equation for output dimension,</p>
+<p>$$n_{out} = \lfloor \frac{n_{in} + 2p - k}{s} \rfloor + 1$$</p>
+<p>we get that the <code>stride</code> and <code>padding</code> are both 1.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">block</span><span class="p">:</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
                     <span class="n">layers_list</span> <span class="o">+=</span> <span class="p">[</span>
                         <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">in_channels</span><span class="o">=</span><span class="n">num_channels</span><span class="p">,</span> <span class="n">out_channels</span><span class="o">=</span><span class="n">layer</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="n">stride</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">padding</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)),</span>
-                        <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">(</span><span class="n">layer</span><span class="p">),</span> <span class="c1"># Added to work on CIFAR10</span>
+                        <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">(</span><span class="n">layer</span><span class="p">),</span> 
                         <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">()</span>
-                    <span class="p">]</span>
-                    <span class="n">num_channels</span> <span class="o">=</span> <span class="n">layer</span>
+                    <span class="p">]</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-31'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-31'>#</a>
+      </div>
+      <p>On the other hand, the MaxPool layers halve the input dimensioins, so the <code>stride</code> is 2.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>                    <span class="n">num_channels</span> <span class="o">=</span> <span class="n">layer</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">layers_list</span> <span class="o">+=</span> <span class="p">[</span>
                         <span class="n">nn</span><span class="o">.</span><span class="n">MaxPool2d</span><span class="p">(</span><span class="n">kernel_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-                    <span class="p">]</span>
-        <span class="n">layers</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="o">*</span><span class="n">layers_list</span><span class="p">)</span>
+                    <span class="p">]</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-32'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-32'>#</a>
+      </div>
+      <p>Sample tensor simulating one training instance from ImageNet</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">layers</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="o">*</span><span class="n">layers_list</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">num_channels</span><span class="p">,</span> <span class="n">layers</span>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     <span class="n">testing</span> <span class="o">=</span> <span class="n">VGGModel</span><span class="p">(</span><span class="s2">&quot;VGG19&quot;</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
-    <span class="n">t1</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">224</span><span class="p">,</span><span class="mi">224</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">testing</span><span class="p">(</span><span class="n">t1</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">())</span>
-    <span class="n">summary</span><span class="p">(</span><span class="n">testing</span><span class="p">,</span> <span class="n">input_size</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">224</span><span class="p">,</span><span class="mi">224</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
-
-</pre></div>
+    <span class="n">t1</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">224</span><span class="p">,</span><span class="mi">224</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-33'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-33'>#</a>
+      </div>
+      <p>Print result: <code>(1,1000)</code></p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="nb">print</span><span class="p">(</span><span class="n">testing</span><span class="p">(</span><span class="n">t1</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">())</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-34'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-34'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
