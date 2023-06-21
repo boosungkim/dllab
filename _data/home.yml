@@ -8,7 +8,7 @@ navbar_entries:
 project_entries:
   - title: ResNet
     url: docs/resnet.html
-    desc: ResNet with bottleneck skip-connections from "Deep Residual Learning for Image Recognition"
+    desc: ResNet and bottleneck skip-connections from "Deep Residual Learning for Image Recognition"
 
   - title: VGG
     url: docs/vgg.html
