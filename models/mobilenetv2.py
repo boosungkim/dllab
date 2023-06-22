@@ -13,7 +13,7 @@ It is strongly to be familiar with Residual Learning before studying MobileNetV2
 
 ## Depthwise Separable Convolutions
 
-IMAGE
+<img src="/dllab/assets/images/posts/mobilenetv2/separable.png" width="350">
 
 Depthwise separable convolutions are specific convolution types used in inverted 
 residual learning. Depthwise separable convolutions use a two-step process of depthwise convolution 
@@ -36,7 +36,7 @@ indicating a reduction of computational cost.
 
 ## Linear Bottlenecks
 
-IMAGE
+<img src="/dllab/assets/images/posts/mobilenetv2/inverted-residual.png" width="300">
 
 Much like the ResNet linear bottlenecks, MobileNetV2 linear bottlenecks use two \\(1 \times 1\\) convolutions and one \\(3 \times 3\\) convolution. 
 The difference is that MobileNetV2 uses \\(1 \times 1\\) expansion layer, \\(3 \times 3\\) depthwise convolution layer, and a \\(1 \times 1\\) projection layer. 
@@ -58,9 +58,9 @@ class InvertedResidualBlock(nn.Module):
         #### Parameters
         `input_channels`: input number of channels  
         `output_channels`: output number of channels  
-        `expansion`: the expansion ratio for the number of channels
+        `expansion`: the expansion ratio for the number of channels  
         `stride`: the stride length of the depthwise convolution. Stride is 1 when repeating the same 
-        residual block and 2 when downsampling is used to transition to the next layer. 
+        inverted residual block and 2 when downsampling is used. 
         The shortcut connection will use the same stride to keep the dimensions the same.
         """
         self.block = nn.Sequential(
@@ -130,13 +130,15 @@ class InvertedResidualBlock(nn.Module):
 # === MobileNetV2 Model ===
 
 """
-IMAGE
+<img src="/dllab/assets/images/posts/mobilenetv2/mobilenetv2-architecture.png" width="300">
 
 This is the main part of the MobileNetV2 model.
 """
 class MobileNetV2(nn.Module):
+    # MobileNetV2 configuration mentioned in the paper. Each list represents a bottleneck layer, 
+    # and the list contains:  
+    # [t (expansion), c (output channels), n (repetition number), s (stride)].
     configuration = [
-#       t (expansion), c (output channels), n(repetition num), s(stride)
         [1, 16, 1, 1],
         [6, 24, 2, 2],
         [6, 32, 3, 2],
@@ -146,10 +148,18 @@ class MobileNetV2(nn.Module):
         [6, 320, 1, 1]
     ]
     def __init__(self, input_width, output_num, input_channels=3):
+        """
+        #### Parameters
+        `input_width`: the width of the input image  
+        `output_num`: the number of classes  
+        `input_channels`: the number input channels (3 for RGB images)
+        """
         super(MobileNetV2, self).__init__()
+        # Keep track of the number of feature maps throughout the network
         self.current_channels = 32
 
-        # preliminary layer
+        # #### Preliminary layer
+        # Consists of Conv2d -> Batch Normalization -> ReLU
         self.preliminary = nn.Sequential(
             nn.Conv2d(in_channels=input_channels,
                       out_channels=self.current_channels,
@@ -161,6 +171,8 @@ class MobileNetV2(nn.Module):
             nn.ReLU()
         )
         
+        # #### Inverted Residual Blocks
+        # 7 layers of Inverted Residual Blocks with different configurations
         self.layer1 = self.make_layer(self.configuration[0])
         self.layer2 = self.make_layer(self.configuration[1])
         self.layer3 = self.make_layer(self.configuration[2])
@@ -169,7 +181,9 @@ class MobileNetV2(nn.Module):
         self.layer6 = self.make_layer(self.configuration[5])
         self.layer7 = self.make_layer(self.configuration[6])
 
-        # final layer
+        # #### Final layer
+        # Consists of Conv2d -> Flatten -> FC -> Softmax
+        # Since the input was downsampled 5 times throughout the network, the input width/height at the end is halved 5 times.
         self.final = nn.Sequential(
             nn.Conv2d(in_channels=self.current_channels,
                       out_channels=1280,
@@ -182,7 +196,7 @@ class MobileNetV2(nn.Module):
             nn.Softmax(dim=1)
         )
 
-
+    # Propagate
     def forward(self,x):
         z = self.preliminary(x)
         
@@ -197,7 +211,17 @@ class MobileNetV2(nn.Module):
         z = self.final(z)
         return z
 
+    # Create layer of Inverted Residual Blocks
     def make_layer(self, layer_cofig):
+        """
+        Create a layer.
+
+        #### Parameters
+        `layer_config`: parameter configuration
+
+        #### Returns
+        `nn.Sequential(*layers)`: Sequence of layers in the whole Inverted Residual Block layer  
+        """
         expansion, output_channels, repetition_num, stride = layer_cofig
 
         layers = []
@@ -210,8 +234,11 @@ class MobileNetV2(nn.Module):
 # === Tensor Test ===
 
 if __name__ == "__main__":
+    # Sample tensor simulating one training instance from ImageNet
     img = torch.randn(1,3,224,224)    
-    # Testing MobileNetV2
-    test_model = MobileNetV2(224,10)
-    # print(test_model(img).size())
-    summary(test_model, input_size=(1,3,224,224), col_names=["input_size","output_size","num_params"])
+
+    # MobileNetV2
+    test_model = MobileNetV2(224,1000)
+
+    # Size output: (1,1000)
+    print(test_model(img).size())
