@@ -8,15 +8,15 @@ navbar_entries:
 project_entries:
   - title: EfficientNet
     url: 
-    desc: In progress
+    desc: EfficientNet
 
   - title: MobileNetV2
-    url: 
-    desc: In progress
+    url: docs/mobilenetv2.html
+    desc: MobileNetV2 from "MobileNetV2 - Inverted Residuals and Linear Bottlenecks"
   
   - title: SE-Net
     url: docs/senet.html
-    desc: In progress
+    desc: SE-Net from "Squeeze-and-Excitation Networks"
   
   - title: DenseNet
     url: docs/densenet.html
