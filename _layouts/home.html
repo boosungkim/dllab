@@ -18,12 +18,12 @@ layout: default
 
 {% if site.theme_config.show_projects == true %}
   <h2>{{ site.theme_config.home.title_imagenet }}</h2>
-  {% include card_list.html collection=site.data.home.project_entries %}
+  {% include card_list.html collection=site.data.home.title_imagenet %}
 {% endif %}
 
-{% if site.theme_config.show_misc_list == true %}
-  <h2>{{ site.theme_config.home.title_misc_list }}</h2>
-  {% include vertical_list.html collection=site.data.home.misc_entries %}
+{% if site.theme_config.show_projects == true %}
+  <h2>{{ site.theme_config.home.title_basics }}</h2>
+  {% include card_list.html collection=site.data.home.title_basics %}
 {% endif %}
 
 {% if site.theme_config.show_blog == true %}

@@ -2,7 +2,7 @@ title: DeepLearnLab
 author: Boosung Kim
 url: https://boosungkim.com/dllab # root address of the site
 description: > # description of the site (multiple lines allowed)
-  DeepLearnLab is an accumulation of Pytorch/Tensorflow implementations of milestone papers in Deep Learning. This site and the implementations were developed by Boosung Kim.
+  DeepLearnLab is an accumulation of Pytorch implementations of milestone papers in Deep Learning. The implementations were developed by Boosung Kim. The site is based off of the moonwalk Jeykll theme. Access through a computer is recommended, as code portions are not mobile-friendly yet.
 
 permalink: /:slug
 
@@ -33,7 +33,8 @@ theme_config:
   show_tags: true # show tags in a blog posts
   # options for "home" page
   home:
-    title_imagenet: ImageNet Models
+    title_imagenet: Image Classification
+    title_basics: Back to Basics
     title_misc_list: Recent Updates
     title_blog: Blog
     title_old_projects: Old Projects

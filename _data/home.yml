@@ -5,7 +5,7 @@ navbar_entries:
   - title: personal-website
     url: https://boosungkim.com
 
-project_entries:
+title_imagenet:
   - title: EfficientNet
     url: docs/efficientnet.html
     desc: EfficientNet from "EfficientNet - Rethinking Model Scaling for Convolutional Neural Networks"
@@ -30,20 +30,10 @@ project_entries:
     url: docs/vgg.html
     desc: Various VGG models from "Very Deep Convulutional Networks For Large-Scale Image Recognition"
 
-test_entries:
-  - title: Project 4
-    url: overview-post
-    desc: This project uses highlight markup, configured in _data/home.yml
-    highlight: WIP
-
-  - title: Project 5
-    url: overview-post
-    desc: Moonwalk also has horizontal list (used in header and footer)
-    highlight: WIP
-
-  - title: Project 6
-    url: overview-post
-    desc: It also has a scalable vertical list (in case you need it)
+title_basics:
+  - title: Autograd
+    url: docs/autograd.html
+    desc: An implementation of Pytorch's autograd and tensors
 
 old_project_entries:
   - title: Soopr
