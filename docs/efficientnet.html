@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <title>EfficientNet</title>
+  <link rel="stylesheet" href="pycco.css">
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+<div id='container'>
+  <div id="background"></div>
+  <div class='section'>
+    <div class='docs'><h1>EfficientNet</h1></div>
+  </div>
+  <div class='clearall'>
+  <div class='section' id='section-0'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-0'>#</a>
+      </div>
+      <p>This is a Pytorch implementation of the <a href="https://arxiv.org/abs/1905.11946">EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks</a> paper.</p>
+<p>Unlike ResNet, MobileNetV2, or some other models, EfficientNet does not introduce a 
+completely new architecture concept. Instead, it introduces the idea of compound scaling, stochastic depth, and a base model, EfficientNet, to test the new scaling method.</p>
+<p>The EfficientNet utilizes Inverted Residual Blocks from <a href="mobilenetv2.html">MobileNetV2</a>, Squeeze-and-Efficient layers from <a href="senet.html">SE-Net</a>, 
+so background knowledge on both are heavily recommended.</p>
+<h2>Scaling and Balancing</h2>
+<p><img src="/dllab/assets/images/posts/efficientnet/model-scaling.png" width="400"></p>
+<p>The authors argue that while scaling up depth, width, image resolution are common techniques to improve the model performance, previous papers use arbitrary scaling.</p>
+<p>Depth is the most common method of scaling models. The VGG paper introduced the importance of depth, while ResNet and Densenet helped resolve the issue of training degradation.</p>
+<p>Shallow networks generally use width scaling to capture features while being easy to train.</p>
+<p>Scaling resolution is uncommon, but some networks GPipe utilize this to perform better. Resolution scaling is essentially increasing the width and height of the input images.</p>
+<p>The empirical results of the paper indicate that a balance among width/depth/resolution can be achieved through compound scaling, which scales all three by a constant factor.</p>
+<h2>Compound Scaling</h2>
+<p>The idea behind compound scaling is to uniformly scale the depth, width, and resolution of the network in a principled manner. The authors introduce a compound coefficient, denoted as \(\phi\), 
+that controls the scaling factor for each dimension. By varying the value of \(\phi\), 
+the network can be scaled up or down while maintaining a balance among depth, width, and resolution.</p>
+<p>The compound scaling is achieved by applying a set of predefined scaling rules. These rules specify how the depth, width, and resolution should be scaled based on the compound coefficient \(\phi\). 
+By following these rules, the network’s capacity is increased in a balanced way, ensuring that no individual dimension dominates the scaling process.</p>
+<p>$$depth: d = \alpha^{\phi}$$<br />
+$$width: w = \beta^{\phi}$$<br />
+$$resolution: r = \gamma^{\phi}$$<br />
+such that \(\alpha \dot \beta^2 \dot \gamma^2 \approx 2\) and \(\alpha \geq 1, \beta \geq 1, \gamma \geq 1\).</p>
+<p>For EfficientNetB0, the authors first fixed \(\phi\) at 1 and performed a grid search for \(\alpha, \beta, \gamma\) 
+based on the equations above. The results showed that the best values are</p>
+<p>$$\alpha = 1.2, \beta = 1.1, \gamma = 1.15.$$</p>
+<p>The authors used this approach to minimize search cost, but it is technically possible to find the optimal 
+\(\alpha, \beta, \gamma\)values using a larger model.</p>
+<h2>Stochastic Depth</h2>
+<p>Stochastic depth is essentially dropout for layers. For each mini-batch, some residual layers are completely dropped and only the residual skip connections are passed along.</p>
+<p>This allows the network to train with a shorter effective depth, reducing the risk of overfitting and promoting regularization. By randomly dropping layers, stochastic depth provides a form of regularization similar to dropout but specifically tailored for residual networks.</p>
+<p>Note: The authors of the paper use SiLU instead of ReLU.</p>
+<p><a href="https://boosungkim.com/blog/2023/efficientnet-implementation/">Accompanying blog post</a></p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">from</span> <span class="nn">torchinfo</span> <span class="kn">import</span> <span class="n">summary</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-1'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-1'>#</a>
+      </div>
+      <h3><span id="efficientnetb0-configuration" href="efficientnetb0-configuration"> EfficientNetB0 Configuration </span></h3>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-2'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-2'>#</a>
+      </div>
+      <p><img src="/dllab/assets/images/posts/efficientnet/efficientnet-b0.png" width="350"></p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="n">EfficientNet_B0</span> <span class="o">=</span> <span class="p">[</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-3'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-3'>#</a>
+      </div>
+      <p>EfficientNetB0 configuration mentioned in the paper. Each list represents a bottleneck layer, 
+and the list contains:<br />
+[t (expansion), c (number of output channels), L (number of layers), k (kernel size), s (stride)].</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">112</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">192</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">320</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+<span class="p">]</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-4'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-4'>#</a>
+      </div>
+      <p>The phi value, resolution, and stochastic depth drop rate mentioned in the paper.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="n">phi_values</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-5'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-5'>#</a>
+      </div>
+      <h3><span id="standard-convolutional-block" href="standard-convolutional-block"> Standard Convolutional Block </span></h3>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-6'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-6'>#</a>
+      </div>
+      <p>Standard convolutional block refactored due to high reuse in the model.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">ConvBlock</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-7'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-7'>#</a>
+      </div>
+      <h4>Parameters</h4>
+<p><code>input_channels</code>: input number of channels<br />
+<code>output_channels</code>: output number of channels<br />
+<code>kernel_size</code>: kernel size of the convolution filter<br />
+<code>stride</code>: the stride length of the convolution<br />
+<code>padding</code>: the padding of the convolution<br />
+<code>groups</code>: standard vs depthwise convolution</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_channels</span><span class="p">,</span> <span class="n">output_channels</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-8'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-8'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="nb">super</span><span class="p">(</span><span class="n">ConvBlock</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-9'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-9'>#</a>
+      </div>
+      <p>Convolutional layer (either standard or depthwise)</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="bp">self</span><span class="o">.</span><span class="n">conv</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">input_channels</span><span class="p">,</span> <span class="n">output_channels</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="n">groups</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-10'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-10'>#</a>
+      </div>
+      <p>Batch normalization</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="bp">self</span><span class="o">.</span><span class="n">batch</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">(</span><span class="n">output_channels</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-11'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-11'>#</a>
+      </div>
+      <p>SiLU</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="bp">self</span><span class="o">.</span><span class="n">silu</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">SiLU</span><span class="p">()</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-12'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-12'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">x</span><span class="p">):</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">silu</span><span class="p">(</span><span class="n">z</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-13'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-13'>#</a>
+      </div>
+      <h3><span id="squeeze-and-excitation-block" href="squeeze-and-excitation-block"> Squeeze-and-Excitation Block </span></h3>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-14'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-14'>#</a>
+      </div>
+      <p><a href="senet.html">More details</a></p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">SE_Net</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-15'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-15'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_channels</span><span class="p">,</span> <span class="n">reduction_ratio</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SE_Net</span><span class="p">,</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sequence</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-16'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-16'>#</a>
+      </div>
+      <h4>1. Squeeze</h4>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>            <span class="n">nn</span><span class="o">.</span><span class="n">AdaptiveAvgPool2d</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Flatten</span><span class="p">(),</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-17'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-17'>#</a>
+      </div>
+      <h4>2. Excitation</h4>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">input_channels</span><span class="p">,</span> <span class="n">input_channels</span> <span class="o">//</span> <span class="n">reduction_ratio</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-18'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-18'>#</a>
+      </div>
+      <p>SiLU instead of ReLU</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>            <span class="n">nn</span><span class="o">.</span><span class="n">SiLU</span><span class="p">(),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">input_channels</span> <span class="o">//</span> <span class="n">reduction_ratio</span><span class="p">,</span> <span class="n">input_channels</span><span class="p">),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Sigmoid</span><span class="p">(),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Unflatten</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">input_channels</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+        <span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-19'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-19'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">x</span><span class="p">):</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sequence</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-20'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-20'>#</a>
+      </div>
+      <h4>3. Rescale</h4>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">z</span> <span class="o">=</span> <span class="n">x</span><span class="o">*</span><span class="n">z</span>
+        <span class="k">return</span> <span class="n">z</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-21'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-21'>#</a>
+      </div>
+      <h3><span id="inverted-residual-block" href="inverted-residual-block"> Inverted Residual Block </span></h3>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-22'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-22'>#</a>
+      </div>
+      <p><a href="mobilenetv2.html">More details</a></p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">InvertedResidualBlock</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-23'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-23'>#</a>
+      </div>
+      <h4>Parameters</h4>
+<p><code>input_channels</code>: input number of channels<br />
+<code>output_channels</code>: output number of channels<br />
+<code>kernel_size</code>: kernel size of the convolution<br />
+<code>stride</code>: the stride length of the depthwise convolution. Stride is 1 when repeating the same 
+inverted residual block and 2 when downsampling is used. The shortcut connection will use the same stride to keep the dimensions the same.<br />
+<code>padding</code>: padding of the convolution<br />
+<code>expansion</code>: the expansion ratio for the number of channels<br />
+<code>reduction_ratio</code>: reduction ratio for the SE-Net<br />
+<code>survival_prob</code>: survival probability for stochastic depth</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_channels</span><span class="p">,</span> <span class="n">output_channels</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span> <span class="n">expansion</span><span class="p">,</span> <span class="n">reduction_ratio</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">survival_prob</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-24'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-24'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="nb">super</span><span class="p">(</span><span class="n">InvertedResidualBlock</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">survival_prob</span> <span class="o">=</span> <span class="n">survival_prob</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-25'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-25'>#</a>
+      </div>
+      <p>True if residual will be used (when input and output dimensions are the same)</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="bp">self</span><span class="o">.</span><span class="n">residual</span> <span class="o">=</span> <span class="n">input_channels</span> <span class="o">==</span> <span class="n">output_channels</span> <span class="ow">and</span> <span class="n">stride</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="n">hidden_dim</span> <span class="o">=</span> <span class="n">input_channels</span><span class="o">*</span><span class="n">expansion</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">expand</span> <span class="o">=</span> <span class="n">input_channels</span> <span class="o">!=</span> <span class="n">hidden_dim</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-26'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-26'>#</a>
+      </div>
+      <p>Expand number of channels by expansion amount</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">expand</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">expand_conv</span> <span class="o">=</span> <span class="n">ConvBlock</span><span class="p">(</span><span class="n">input_channels</span><span class="p">,</span> <span class="n">hidden_dim</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-27'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-27'>#</a>
+      </div>
+      <p>Inverted Residual Block with SE-Net</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="bp">self</span><span class="o">.</span><span class="n">conv</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="n">ConvBlock</span><span class="p">(</span><span class="n">hidden_dim</span><span class="p">,</span> <span class="n">hidden_dim</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="n">hidden_dim</span><span class="p">),</span>
+            <span class="n">SE_Net</span><span class="p">(</span><span class="n">hidden_dim</span><span class="p">,</span> <span class="n">input_channels</span> <span class="o">//</span> <span class="n">reduction_ratio</span><span class="p">),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">hidden_dim</span><span class="p">,</span> <span class="n">output_channels</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">(</span><span class="n">output_channels</span><span class="p">)</span>
+        <span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-28'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-28'>#</a>
+      </div>
+      <p>Propagate</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">x</span><span class="p">):</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expand_conv</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">expand</span> <span class="k">else</span> <span class="n">x</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-29'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-29'>#</a>
+      </div>
+      <p>Apply stochastic depth when residual is used (in between a one layer of Inverted Residual Block)</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">residual</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stochastic_depth</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conv</span><span class="p">(</span><span class="n">z</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv</span><span class="p">(</span><span class="n">z</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-30'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-30'>#</a>
+      </div>
+      <p>Stochastic depth</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">stochastic_depth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-31'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-31'>#</a>
+      </div>
+      <p>Do not use stochastic depth when training</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">x</span>
+        <span class="k">else</span><span class="p">:</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-32'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-32'>#</a>
+      </div>
+      <p>Drop certain outputs by random according to survival probability</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>            <span class="n">binary_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">device</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">survival_prob</span>
+            <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">survival_prob</span><span class="p">)</span> <span class="o">*</span> <span class="n">binary_tensor</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-33'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-33'>#</a>
+      </div>
+      <h3><span id="efficientnet" href="efficientnet"> EfficientNet </span></h3>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-34'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-34'>#</a>
+      </div>
+      <p>This is the main part of the EfficientNet model.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">EfficientNet</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-35'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-35'>#</a>
+      </div>
+      <h4>Parameters</h4>
+<p><code>num_output</code>: the number of classes  </p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_output</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-36'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-36'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="nb">super</span><span class="p">(</span><span class="n">EfficientNet</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-37'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-37'>#</a>
+      </div>
+      <p>Extract \(\alpha, \beta,\) and dropout_rate</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">width_factor</span><span class="p">,</span> <span class="n">depth_factor</span><span class="p">,</span> <span class="n">dropout_rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_factors</span><span class="p">()</span>
+        <span class="n">last_channels</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">1280</span><span class="o">*</span><span class="n">width_factor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pool</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">AdaptiveAvgPool2d</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-38'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-38'>#</a>
+      </div>
+      <p>Inverted Residual layers</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="bp">self</span><span class="o">.</span><span class="n">features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_features</span><span class="p">(</span><span class="n">width_factor</span><span class="p">,</span> <span class="n">depth_factor</span><span class="p">,</span> <span class="n">last_channels</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-39'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-39'>#</a>
+      </div>
+      <p>Classifier layer</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">dropout_rate</span><span class="p">),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">last_channels</span><span class="p">,</span> <span class="n">num_output</span><span class="p">)</span>
+        <span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-40'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-40'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">z</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-41'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-41'>#</a>
+      </div>
+      <p>Extract \(\alpha, \beta, and\) drop rate</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">calculate_factors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mf">1.1</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-42'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-42'>#</a>
+      </div>
+      <h4>Parameters</h4>
+<p><code>alpha</code>: the depth scaling factor<br />
+<code>beta</code>: the width scaling factor</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-43'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-43'>#</a>
+      </div>
+      <p>Calculate depth and width according to the compound scaling equation</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">phi</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">drop_rate</span> <span class="o">=</span> <span class="n">phi_values</span>
+        <span class="n">depth_factor</span> <span class="o">=</span> <span class="n">alpha</span><span class="o">**</span><span class="n">phi</span>
+        <span class="n">width_factor</span> <span class="o">=</span> <span class="n">beta</span><span class="o">**</span><span class="n">phi</span>
+        <span class="k">return</span> <span class="n">width_factor</span><span class="p">,</span> <span class="n">depth_factor</span><span class="p">,</span> <span class="n">drop_rate</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-44'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-44'>#</a>
+      </div>
+      <p>Create Inverted Residual layers with SE-Net</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">create_features</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">width_factor</span><span class="p">,</span> <span class="n">depth_factor</span><span class="p">,</span> <span class="n">last_channels</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-45'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-45'>#</a>
+      </div>
+      <h4>Parameters</h4>
+<p><code>width_factor</code>: the depth scaling amount<br />
+<code>depth_factor</code>: the width scaling amount<br />
+<code>last_channels</code>: output number of feature maps at the end of the final layer</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">channels</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">32</span><span class="o">*</span><span class="n">width_factor</span><span class="p">)</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="p">[</span><span class="n">ConvBlock</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">channels</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
+        <span class="n">in_channels</span> <span class="o">=</span> <span class="n">channels</span>
+
+        <span class="k">for</span> <span class="n">expand_ratio</span><span class="p">,</span> <span class="n">channels</span><span class="p">,</span> <span class="n">num_layers</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="n">stride</span> <span class="ow">in</span> <span class="n">EfficientNet_B0</span><span class="p">:</span>
+            <span class="n">output_channels</span> <span class="o">=</span> <span class="mi">4</span><span class="o">*</span><span class="nb">int</span><span class="p">(</span><span class="n">channels</span><span class="o">*</span><span class="n">width_factor</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span>
+            <span class="n">layer_num</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_layers</span><span class="o">*</span><span class="n">depth_factor</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">layer_num</span><span class="p">):</span>
+                <span class="n">features</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">InvertedResidualBlock</span><span class="p">(</span><span class="n">in_channels</span><span class="p">,</span>
+                                                      <span class="n">output_channels</span><span class="p">,</span>
+                                                      <span class="n">kernel_size</span><span class="o">=</span><span class="n">kernel_size</span><span class="p">,</span>
+                                                      <span class="n">stride</span><span class="o">=</span><span class="n">stride</span> <span class="k">if</span> <span class="n">layer</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">1</span><span class="p">,</span>
+                                                      <span class="n">padding</span><span class="o">=</span><span class="n">kernel_size</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span>
+                                                      <span class="n">expansion</span><span class="o">=</span><span class="n">expand_ratio</span><span class="p">))</span>
+                <span class="n">in_channels</span> <span class="o">=</span> <span class="n">output_channels</span>
+        <span class="n">features</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ConvBlock</span><span class="p">(</span><span class="n">in_channels</span><span class="p">,</span> <span class="n">last_channels</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="o">*</span><span class="n">features</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-46'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-46'>#</a>
+      </div>
+      <h3><span id="tensor-test" href="tensor-test"> Tensor Test </span></h3>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-47'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-47'>#</a>
+      </div>
+      <p>Sample tensor simulating one training instance from ImageNet</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">test</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">224</span><span class="p">,</span><span class="mi">224</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-48'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-48'>#</a>
+      </div>
+      <p>EfficientNet</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">model</span> <span class="o">=</span> <span class="n">EfficientNet</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-49'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-49'>#</a>
+      </div>
+      <p>Size output: (1,1000)</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="p">(</span><span class="n">test</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">())</span>
+
+</pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+</div>
+</body>

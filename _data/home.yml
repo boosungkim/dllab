@@ -7,8 +7,8 @@ navbar_entries:
 
 project_entries:
   - title: EfficientNet
-    url: 
-    desc: EfficientNet
+    url: docs/efficientnet.html
+    desc: EfficientNet from "EfficientNet - Rethinking Model Scaling for Convolutional Neural Networks"
 
   - title: MobileNetV2
     url: docs/mobilenetv2.html
