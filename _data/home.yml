@@ -30,6 +30,15 @@ title_imagenet:
     url: docs/vgg.html
     desc: Various VGG models from "Very Deep Convulutional Networks For Large-Scale Image Recognition"
 
+title_instance_segmentation:
+  - title: RCNN
+    url:
+    desc: In progress
+
+  - title: Fast RCNN
+    url:
+    desc: In progress
+
 title_basics:
   - title: Autograd
     url: docs/autograd.html

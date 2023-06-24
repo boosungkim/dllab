@@ -34,6 +34,7 @@ theme_config:
   # options for "home" page
   home:
     title_imagenet: Image Classification
+    title_instance_segmentation: Instance Segmentation
     title_basics: Back to Basics
     title_misc_list: Recent Updates
     title_blog: Blog
