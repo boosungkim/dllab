@@ -1,5 +1,5 @@
 """
-<img src="/assets/images/posts/autograd/pytorch-autograd.png" width="350">
+<img src="/dllab/assets/images/posts/autograd/pytorch-autograd.png" width="350">
 
 A simple implementation of PyTorch's autograd. Heavily inspired by Andrej Karpathy's micrograd lecture.
 
