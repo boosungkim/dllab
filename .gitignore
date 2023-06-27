@@ -5,3 +5,10 @@ models/__pycache__
 .jekyll-cache
 .sass-cache
 _site
+vendor
+bin/bundle
+bin/jekyll
+bin/kramdown
+bin/listen
+bin/rougify
+bin/safe_yaml

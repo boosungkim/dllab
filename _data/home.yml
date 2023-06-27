@@ -31,10 +31,6 @@ title_imagenet:
     desc: Various VGG models from "Very Deep Convulutional Networks For Large-Scale Image Recognition"
 
 title_instance_segmentation:
-  - title: RCNN
-    url:
-    desc: In progress
-
   - title: Fast RCNN
     url:
     desc: In progress
@@ -42,7 +38,7 @@ title_instance_segmentation:
 title_basics:
   - title: Autograd
     url: docs/autograd.html
-    desc: An implementation of Pytorch's autograd and tensors
+    desc: An implementation of Pytorch's autograd, tensors, nn.Module, and nn.Linear
 
 old_project_entries:
   - title: Soopr
